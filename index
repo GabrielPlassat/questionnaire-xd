@@ -1,108 +1,107 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Questionnaire vocal</title>
+  <meta charset="UTF-8">
+  <title>Questionnaire Vocal</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <style>
-    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
-    input, button { margin: 0.5rem 0; padding: 0.5rem; width: 100%; }
-    .hidden { display: none; }
-  </style>
 </head>
 <body>
   <h1>Questionnaire vocal</h1>
 
-  <!-- AUTH SECTION -->
+  <!-- Connexion Google -->
   <div id="auth-section">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Mot de passe">
-    <button onclick="login()">Connexion / Inscription</button>
+    <p>Merci de vous connecter pour répondre :</p>
+    <button onclick="signInWithGoogle()">Se connecter avec Google</button>
   </div>
 
-  <!-- QUESTION SECTION -->
+  <!-- Section question -->
   <div id="question-section" class="hidden">
-    <p><strong>Question :</strong> Qu'avez-vous pensé de notre service ?</p>
-    <button onclick="startListening()">🎤 Répondre à l'oral</button>
-    <textarea id="responseText" rows="4" placeholder="Votre réponse s'affichera ici..."></textarea>
-    <button onclick="submitResponse()">Envoyer la réponse</button>
+    <p id="question">Quelle est votre expérience aujourd'hui ?</p>
+    <button onclick="startDictation()">🎤 Répondre à l'oral</button>
+    <p id="response"></p>
   </div>
 
   <script>
-    // 🔥 Ton config Firebase ici :
+    // 🧩 Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBGxs6sUV2lp5bFaEvdV7fLAz6wz4vwoZI",
       authDomain: "questionnairexd.firebaseapp.com",
-      projectId: "questionnairexd",
+      projectId: "questionnairexd"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
+    // 🟢 Google Sign-In
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          console.log("Connecté :", result.user.email);
+          document.getElementById('auth-section').classList.add('hidden');
+          document.getElementById('question-section').classList.remove('hidden');
+        })
+        .catch(error => {
+          console.error("Erreur de connexion :", error);
+          alert("Erreur : " + error.message);
+        });
+    }
+
+    // 🧠 Airtable config
     const airtableApiKey = "patm67mBcEcBXZeED.4c1588d4b1dfa37df6a155af1e77a3c1cad77ddd380ae9d7937c41ad750d26f2";
     const airtableBaseId = "apprjFOnbLySO8spa";
-    const airtableTable = "shriT4asLXyKRlFbt";
+    const airtableTable = "shriT4asLXyKRlFbt"; 
     const questionId = "q1";
 
-    let currentUser = null;
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('question-section').classList.remove('hidden');
-      }
-    });
-
-    function login() {
-      const email = document.getElementById("email").value;
-      const pass = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(() => auth.createUserWithEmailAndPassword(email, pass))
-        .catch(alert);
-    }
-
-    function startListening() {
+    // 🎤 Dictée vocale
+    function startDictation() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "fr-FR";
+      recognition.lang = 'fr-FR';
       recognition.start();
-
       recognition.onresult = (event) => {
-        const result = event.results[0][0].transcript;
-        document.getElementById("responseText").value = result;
+        const response = event.results[0][0].transcript;
+        document.getElementById('response').textContent = "Réponse : " + response;
+        sendToAirtable(response);
       };
-
-      recognition.onerror = (e) => alert("Erreur de reconnaissance vocale : " + e.error);
     }
 
-    async function submitResponse() {
-      const text = document.getElementById("responseText").value.trim();
-      if (!text) return alert("Aucune réponse saisie.");
-      const userId = currentUser.uid;
+    // 📨 Envoi vers Airtable
+    function sendToAirtable(text) {
+      const user = auth.currentUser;
+      if (!user) return alert("Pas connecté");
 
-      const res = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTable}`, {
+      fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTable}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${airtableApiKey}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          fields: {
-            userId: userId,
-            questionId: questionId,
-            reponse: text,
-            date: new Date().toISOString()
-          }
+          records: [{
+            fields: {
+              Email: user.email,
+              Question: questionId,
+              Réponse: text,
+              Horodatage: new Date().toISOString()
+            }
+          }]
         })
-      });
-
-      if (res.ok) {
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Enregistré :", data);
         alert("Réponse enregistrée !");
-        document.getElementById("responseText").value = "";
-      } else {
-        alert("Erreur lors de l'envoi dans Airtable.");
-      }
+      })
+      .catch(err => {
+        console.error("Erreur Airtable :", err);
+        alert("Erreur lors de l'envoi.");
+      });
     }
   </script>
+
+  <style>
+    .hidden { display: none; }
+    button { font-size: 1.2em; margin-top: 10px; }
+  </style>
 </body>
 </html>

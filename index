@@ -18,7 +18,9 @@
     const firebaseConfig = {
       apiKey: "AIzaSyBGxs6sUV2lp5bFaEvdV7fLAz6wz4vwoZI",
       authDomain: "questionnairexd.firebaseapp.com",
-      projectId: "questionnairexd"
+      projectId: "questionnairexd",
+      storageBucket: "questionnairexd.firebasestorage.app",
+      messagingSenderId: "673392594508",
       appId: "1:673392594508:web:7943a387ba7aa51d96eee9"
     };
 

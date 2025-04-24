@@ -32,15 +32,15 @@
   <script>
     // 🔥 Ton config Firebase ici :
     const firebaseConfig = {
-      apiKey: "TON_API_KEY",
-      authDomain: "TON_AUTH_DOMAIN",
-      projectId: "TON_PROJECT_ID",
+      apiKey: "AIzaSyBGxs6sUV2lp5bFaEvdV7fLAz6wz4vwoZI",
+      authDomain: "questionnairexd.firebaseapp.com",
+      projectId: "questionnairexd",
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    const airtableApiKey = "TON_AIRTABLE_API_KEY";
-    const airtableBaseId = "TON_BASE_ID";
+    const airtableApiKey = "patm67mBcEcBXZeED.4c1588d4b1dfa37df6a155af1e77a3c1cad77ddd380ae9d7937c41ad750d26f2";
+    const airtableBaseId = "apprjFOnbLySO8spa";
     const airtableTable = "Reponses";
     const questionId = "q1";
 

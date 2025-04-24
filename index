@@ -1,1 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Questionnaire vocal</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; max-width: 600px; margin: auto; }
+    input, button { margin: 0.5rem 0; padding: 0.5rem; width: 100%; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Questionnaire vocal</h1>
 
+  <!-- AUTH SECTION -->
+  <div id="auth-section">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button onclick="login()">Connexion / Inscription</button>
+  </div>
+
+  <!-- QUESTION SECTION -->
+  <div id="question-section" class="hidden">
+    <p><strong>Question :</strong> Qu'avez-vous pensé de notre service ?</p>
+    <button onclick="startListening()">🎤 Répondre à l'oral</button>
+    <textarea id="responseText" rows="4" placeholder="Votre réponse s'affichera ici..."></textarea>
+    <button onclick="submitResponse()">Envoyer la réponse</button>
+  </div>
+
+  <script>
+    // 🔥 Ton config Firebase ici :
+    const firebaseConfig = {
+      apiKey: "TON_API_KEY",
+      authDomain: "TON_AUTH_DOMAIN",
+      projectId: "TON_PROJECT_ID",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const airtableApiKey = "TON_AIRTABLE_API_KEY";
+    const airtableBaseId = "TON_BASE_ID";
+    const airtableTable = "Reponses";
+    const questionId = "q1";
+
+    let currentUser = null;
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('question-section').classList.remove('hidden');
+      }
+    });
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const pass = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(() => auth.createUserWithEmailAndPassword(email, pass))
+        .catch(alert);
+    }
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "fr-FR";
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        document.getElementById("responseText").value = result;
+      };
+
+      recognition.onerror = (e) => alert("Erreur de reconnaissance vocale : " + e.error);
+    }
+
+    async function submitResponse() {
+      const text = document.getElementById("responseText").value.trim();
+      if (!text) return alert("Aucune réponse saisie.");
+      const userId = currentUser.uid;
+
+      const res = await fetch(`https://api.airtable.com/v0/${airtableBaseId}/${airtableTable}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${airtableApiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          fields: {
+            userId: userId,
+            questionId: questionId,
+            reponse: text,
+            date: new Date().toISOString()
+          }
+        })
+      });
+
+      if (res.ok) {
+        alert("Réponse enregistrée !");
+        document.getElementById("responseText").value = "";
+      } else {
+        alert("Erreur lors de l'envoi dans Airtable.");
+      }
+    }
+  </script>
+</body>
+</html>

@@ -47,12 +47,6 @@
         });
     }
 
-    // 🧠 Airtable config
-    const airtableApiKey = "patm67mBcEcBXZeED.4c1588d4b1dfa37df6a155af1e77a3c1cad77ddd380ae9d7937c41ad750d26f2";
-    const airtableBaseId = "apprjFOnbLySO8spa";
-    const airtableTable = "shriT4asLXyKRlFbt"; 
-    const questionId = "q1";
-
     // 🎤 Dictée vocale
     function startDictation() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -63,7 +57,17 @@
         document.getElementById('response').textContent = "Réponse : " + response;
         sendToAirtable(response);
       };
+      recognition.onerror = (error) => {
+      console.error("Erreur de dictée vocale:", error);
+      alert("Erreur de dictée vocale.");
+      };
     }
+
+    // 🧠 Airtable config
+    const airtableApiKey = "patm67mBcEcBXZeED.4c1588d4b1dfa37df6a155af1e77a3c1cad77ddd380ae9d7937c41ad750d26f2";
+    const airtableBaseId = "apprjFOnbLySO8spa";
+    const airtableTable = "shriT4asLXyKRlFbt"; 
+    const questionId = "q1";
 
     // 📨 Envoi vers Airtable
     function sendToAirtable(text) {

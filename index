@@ -1,6 +1,51 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Connexion avec Google</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <h2>Connexion avec Google</h2>
+  <button id="google-sign-in">Se connecter avec Google</button>
+
+  <script>
+    // Remplace ici par tes vraies infos Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGxs6sUV2lp5bFaEvdV7fLAz6wz4vwoZI",
+      authDomain: "questionnairexd.firebaseapp.com",
+      projectId: "questionnairexd"
+      appId: "1:673392594508:web:7943a387ba7aa51d96eee9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.getElementById("google-sign-in").addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(result => {
+          console.log("Connecté :", result.user.displayName);
+          alert("Bienvenue, " + result.user.displayName);
+        })
+        .catch(error => {
+          console.error("Erreur :", error);
+          alert("Erreur : " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>
+
+//////////
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
   <meta charset="UTF-8">
   <title>Questionnaire Vocal</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
